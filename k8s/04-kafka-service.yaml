@@ -54,14 +54,11 @@ spec:
               value: "0"
 
           readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"
+            tcpSocket:
+              port: 9092
             initialDelaySeconds: 15
             periodSeconds: 5
-            timeoutSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 20
 
 ---
