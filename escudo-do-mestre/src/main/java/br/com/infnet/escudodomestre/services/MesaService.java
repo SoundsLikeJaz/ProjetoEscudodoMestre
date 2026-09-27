@@ -22,6 +22,10 @@ public class MesaService {
         return this.mesaRepository.save(mesa);
     }
 
+    public List<Mesa> listarTodas() {
+        return this.mesaRepository.findAll();
+    }
+
     public List<Mesa> listarPorMestre(String mestre) {
         return this.mesaRepository.findByMestre(mestre);
     }

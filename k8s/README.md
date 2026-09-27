@@ -28,13 +28,13 @@ kind load docker-image config-server:1.0 --name escudo-mestre
 
 Catálogo de mesas:
 ```bash
-docker build -t catalogo-filmes-service:1.0 ./escudo-do-mestre
+docker build -t  escudo-do-mestre-service:1.0 ./escudo-do-mestre
 kind load docker-image escudo-do-mestre-service:1.0 --name escudo-mestre
 ```
 
 Catálogo de fichas:
 ```bash
-docker build -t ratings-catalog-service:1.0 ./ficha-microservice
+docker build -t ficha-service:1.0 ./ficha-microservice
 kind load docker-image ficha-service:1.0 --name escudo-mestre
 ```
 
@@ -53,7 +53,7 @@ kubectl apply -f k8s/
 ## 5. Ver se subiu
 
 ```bash
-kubectl get pods -n escudo-mestre -w
+kubectl get pods -n escudomestre-net -w
 ```
 
 Espera até todos ficarem `1/1 Running` (Ctrl+C pra sair do watch).
@@ -64,7 +64,7 @@ Os Services sao ClusterIP (so existem dentro do cluster). Pra acessar do computa
 abre um tunel:
 
 ```bash
-kubectl port-forward -n escudo-mestre svc/gateway 8080:8080
+kubectl port-forward -n escudomestre-net svc/gateway 8080:8080
 ```
 
 Depois, tudo passa pelo gateway usando o nome do servico como prefixo:
@@ -75,7 +75,7 @@ curl http://localhost:8080/escudo-do-mestre/mesas/mestre/1
 
 Pra ver o painel do Eureka: 
 ```bash
-kubectl port-forward -n escudo-mestre svc/eureka-server 8761:8761
+kubectl port-forward -n escudomestre-net svc/eureka-server 8761:8761
 ```
 
 ## Tres pegadinhas que quebram o acesso
@@ -103,11 +103,11 @@ downward API (`status.podIP`).
 Comandos uteis pra diagnosticar:
 
 ```bash
-kubectl get pods -n escudo-mestre                                    # quem esta 0/1
-kubectl logs -n escudo-mestre deploy/escudo-do-mestre-service | grep Tomcat  # subiu em qual porta?
-kubectl exec -n escudo-mestre deploy/config-server -- \
-  wget -qO- http://localhost:8888/escudo-do-mestre-service/docker        # o config chega?
-kubectl exec -n escudo-mestre deploy/eureka-server -- \
+kubectl get pods -n escudomestre-net                                    # quem esta 0/1
+kubectl logs -n escudomestre-net deploy/escudo-do-mestre-service | grep Tomcat  # subiu em qual porta?
+kubectl exec -n escudomestre-net deploy/config-server -- \
+  wget -qO- http://localhost:8888/escudo-do-mestre/docker        # o config chega?
+kubectl exec -n escudomestre-net deploy/eureka-server -- \
   wget -qO- http://localhost:8761/eureka/apps | grep homePageUrl # registrou por IP?
 ```
 
@@ -116,9 +116,9 @@ kubectl exec -n escudo-mestre deploy/eureka-server -- \
 ### Mudei o código de um serviço, e agora?
 
 ```bash
-docker build -t catalogo-filmes-service:1.0 ./catalogo-filmes-service
-kind load docker-image catalogo-filmes-service:1.0 --name escudo-mestre
-kubectl rollout restart deployment/catalogo-filmes-service -n escudo-mestre
+docker build -t escudo-do-mestre-service:1.0 ./escudo-do-mestre-service
+kind load docker-image escudo-do-mestre-service:1.0 --name escudo-mestre
+kubectl rollout restart deployment/escudo-do-mestre-service -n escudomestre-net
 ```
 
 ### Pra derrubar tudo

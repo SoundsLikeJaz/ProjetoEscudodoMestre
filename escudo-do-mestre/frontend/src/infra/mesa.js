@@ -1,4 +1,4 @@
-const URL = 'http://localhost:8080/mesas/';
+const URL = 'http://localhost:8080/escudo-do-mestre/mesas/';
 
 export async function createMesa(mesaData) {
     try {
@@ -13,6 +13,7 @@ export async function createMesa(mesaData) {
             throw new Error('Erro ao criar mesa: ' + response.statusText);
         }
         const data = await response.json();
+        console.log("mesa criada");
         return data;
     } catch (error) {
         console.error('Erro criando mesa:', error);

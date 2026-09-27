@@ -117,7 +117,7 @@ spec:
               mountPath: /config-repo             # o ConfigMap "vira" arquivos nesta pasta
           readinessProbe:                 # so fica Ready quando SERVIR config de verdade
             httpGet:                          # TCP em 8888 responderia mesmo com o backend quebrado
-              path: /CatalogoFilmes/docker
+              path: /escudo-do-mestre/docker
               port: 8888
             initialDelaySeconds: 15
             periodSeconds: 10

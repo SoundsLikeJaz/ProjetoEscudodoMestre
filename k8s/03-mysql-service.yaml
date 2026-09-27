@@ -23,7 +23,7 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               value: "12345678"
             - name: MYSQL_DATABASE
-              value: "MovieCatalog"
+              value: "escudo_do_mestre"
           readinessProbe:
             exec:
               command:

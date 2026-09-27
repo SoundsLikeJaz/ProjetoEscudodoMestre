@@ -27,6 +27,11 @@ public class MesaController {
         return ResponseEntity.ok(this.mesaService.criar(mesa));
     }
 
+    @GetMapping("/")
+    public ResponseEntity<List<Mesa>> listarMesas() {
+        return ResponseEntity.ok(this.mesaService.listarTodas());
+    }
+
     @GetMapping("/mestre/{mestre}")
     public ResponseEntity<List<Mesa>> listarPorMestre(@PathVariable String mestre) {
         return ResponseEntity.ok(this.mesaService.listarPorMestre(mestre));
