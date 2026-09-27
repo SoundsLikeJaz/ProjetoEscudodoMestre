@@ -35,7 +35,7 @@ kind load docker-image escudo-do-mestre-service:1.0 --name escudo-mestre
 Catálogo de fichas:
 ```bash
 docker build -t ratings-catalog-service:1.0 ./ficha-microservice
-kind load docker-image ficha-microservice:1.0 --name escudo-mestre
+kind load docker-image ficha-service:1.0 --name escudo-mestre
 ```
 
 Gateway:
