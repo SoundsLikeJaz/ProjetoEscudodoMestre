@@ -1,0 +1,4 @@
+apiVersion: v1                # versão "básica" da API do Kubernetes
+kind: Namespace                # tipo do objeto: um Namespace
+metadata:
+  name: escudomestre-net   # o nome dessa pasta — vamos usar "-n movie-catalog" em quase todo comando

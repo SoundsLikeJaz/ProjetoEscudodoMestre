@@ -1,0 +1,156 @@
+services:
+
+  # --- Service Discovery ---
+  eureka-server:
+    build: ./eureka-server       # usa o Dockerfile dessa pasta pra construir a imagem
+    container_name: eureka-server # nome fixo do container (e nome que os outros usam na rede)
+    ports:
+      - "8761:8761"                # porta_da_maquina:porta_do_container -> localhost:8761
+    networks:
+      - escudomestre-net           # entra na rede compartilhada com os outros serviços
+
+  # --- Configurações centralizadas (lê o config-repo) ---
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      # monta a pasta config-repo (do seu computador) dentro do container em /config-repo
+      - ./config-escudo-do-mestre:/config-escudo-do-mestre
+    environment:
+      # backend "native" = le os .properties direto da pasta montada acima.
+      # O config-repo/ e uma pasta comum, sem .git, entao o backend git
+      # (spring.cloud.config.server.git.uri) nao funciona aqui: ele exige um
+      # repositorio Git de verdade e falha com "No .git at file:///config-repo".
+      # Sem configuracao, os servicos subiriam sem server.port, na porta 8080,
+      # e as portas publicadas abaixo apontariam para onde ninguem escuta.
+      - SPRING_PROFILES_ACTIVE=native
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:///config-escudo-do-mestre
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8888/escudo-do-mestre/default" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - escudomestre-net
+
+  mysql:
+    image: mysql:8.0
+    container_name: MySQL
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p12345678"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - escudomestre-net
+
+  kafka:
+    image: apache/kafka:4.1.2
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 15s
+
+    networks:
+      - escudomestre-net
+
+  # --- Serviço de mesas ---
+  escudo-do-mestre:
+    build: ./escudo-do-mestre
+    container_name: escudo-do-mestre
+    depends_on:                    # só cria este container depois dos três abaixo
+      eureka-server:               # (não garante que já estejam "prontos", só criados)
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      # troca "localhost" por "config-server", o nome do serviço na rede Docker
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      # ativa o profile "docker", que faz o config-server servir também
+      # CatalogoFilmes-docker.properties (sobrescreve a URL do Eureka)
+      - SPRING_PROFILES_ACTIVE=docker
+      # troca "localhost" por "eureka-server", idem
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "8081:8081"
+    networks:
+      - escudomestre-net
+
+  # --- Serviço de fichas ---
+  ficha-microservice:
+    build: ./ficha-microservice
+    container_name: ficha-microservice
+    depends_on:
+      eureka-server:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      # ativa o profile "docker", que faz o config-server servir também
+      # RatingsCatalog-docker.properties (sobrescreve a URL do Eureka)
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "8082:8082"
+    networks:
+      - escudomestre-net
+
+  # --- API Gateway (porta de entrada única, roteia por nome de serviço no Eureka) ---
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    depends_on:
+      eureka-server:               # gateway só precisa do eureka pra descobrir os serviços
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    ports:
+      - "8080:8080"
+    networks:
+      - escudomestre-net
+
+# Rede virtual que conecta todos os containers acima. É o que permite
+# um container chamar o outro pelo nome (ex: http://eureka-server:8761)
+# em vez de precisar saber um IP.
+networks:
+  escudomestre-net:
+    driver: bridge   # tipo padrão de rede local isolada do Docker
+
