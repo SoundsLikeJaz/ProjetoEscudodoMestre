@@ -1,0 +1,23 @@
+name: Tests Workflow
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Testes escudo-do-mestre
+        run: mvn -f escudo-do-mestre/pom.xml test
+
+      - name: Testes ficha-microservice
+        run: mvn -f ficha-microservice/pom.xml test
