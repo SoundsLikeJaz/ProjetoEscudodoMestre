@@ -1,0 +1,30 @@
+.title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: lightcoral;
+    color: white;
+}
+
+.actions {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: white;
+}
+
+.input {
+    padding: 0.5rem;
+    border-radius: 4px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.submit-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}

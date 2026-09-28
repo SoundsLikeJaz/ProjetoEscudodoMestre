@@ -1,0 +1,20 @@
+.ficha-list {
+    border: 1px dashed red;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.ficha-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.ficha-list-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}

@@ -1,0 +1,28 @@
+.ficha-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 280px;
+    padding: 0.75rem;
+    border: 2px solid darkred;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.ficha-card h3 {
+    margin: 0;
+}
+
+.ficha-atributos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.ficha-atributos span {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.15rem;
+}
